@@ -1,32 +1,25 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
-  // 只允许POST请求
+  // 仅允许 POST
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: 'Method Not Allowed' })
-    };
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
   try {
-    // 从环境变量获取API密钥
+    // 从 Netlify 后台的环境变量读取 Key
     const apiKey = process.env.DEEPSEEK_API_KEY;
-    
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ 
-          error: '服务器配置错误：未找到API密钥。请在Netlify环境变量中设置DEEPSEEK_API_KEY。' 
-        })
+      return { 
+        statusCode: 500, 
+        body: JSON.stringify({ error: '环境变量 DEEPSEEK_API_KEY 未设置' }) 
       };
     }
 
-    // 解析请求体
     const requestData = JSON.parse(event.body);
 
-    // 调用DeepSeek API
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    // 调用 DeepSeek 官方接口
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,44 +28,21 @@ exports.handler = async function(event, context) {
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: requestData.messages,
-        max_tokens: requestData.max_tokens || 2000,
-        temperature: requestData.temperature || 0.7
+        temperature: 0.7
       })
     });
 
-    // 检查响应状态
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('DeepSeek API Error:', errorText);
-      
-      return {
-        statusCode: response.status,
-        body: JSON.stringify({ 
-          error: `DeepSeek API错误 (${response.status}): ${errorText}` 
-        })
-      };
-    }
-
-    // 返回成功响应
     const data = await response.json();
     
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     };
-
   } catch (error) {
-    console.error('Function Error:', error);
-    
     return {
       statusCode: 500,
-      body: JSON.stringify({ 
-        error: `服务器错误: ${error.message}` 
-      })
+      body: JSON.stringify({ error: error.message })
     };
   }
 };
