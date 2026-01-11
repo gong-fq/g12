@@ -1,0 +1,15 @@
+{
+  "name": "grammar-assistant",
+  "version": "1.0.0",
+  "description": "English Grammar Assistant powered by DeepSeek AI",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build step required'"
+  },
+  "keywords": ["grammar", "english", "deepseek", "ai"],
+  "author": "Professor Gong",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
