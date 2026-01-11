@@ -5,9 +5,8 @@ exports.handler = async function(event, context) {
 
   try {
     const apiKey = process.env.DEEPSEEK_API_KEY;
-    const requestData = JSON.parse(event.body);
+    const { messages } = JSON.parse(event.body);
 
-    // 优化 1：使用更稳定的 API 路径并设置合理的超时预期
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -16,12 +15,17 @@ exports.handler = async function(event, context) {
       },
       body: JSON.stringify({
         model: 'deepseek-chat',
-        messages: requestData.messages,
-        // 优化 2：为了防止超时，我们适当控制在 2000 token 以内，但这足以支撑长篇学术解释
-        max_tokens: 2000, 
-        temperature: 0.6
+        messages: messages,
+        max_tokens: 1800, // 适度调整，确保在10秒内能传回大部分核心内容
+        temperature: 0.6,
+        stream: false
       })
     });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      return { statusCode: response.status, body: errorData };
+    }
 
     const data = await response.json();
     return {
@@ -30,6 +34,6 @@ exports.handler = async function(event, context) {
       body: JSON.stringify(data)
     };
   } catch (error) {
-    return { statusCode: 500, body: JSON.stringify({ error: "Professor, the server is temporarily overloaded. 请重试。" }) };
+    return { statusCode: 500, body: JSON.stringify({ error: "Professor, the server timed out. Please try again." }) };
   }
 };
