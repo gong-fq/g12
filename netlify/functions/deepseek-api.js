@@ -1,24 +1,13 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
-  // 仅允许 POST
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
-  }
+  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
 
   try {
-    // 从 Netlify 后台的环境变量读取 Key
     const apiKey = process.env.DEEPSEEK_API_KEY;
-    if (!apiKey) {
-      return { 
-        statusCode: 500, 
-        body: JSON.stringify({ error: '环境变量 DEEPSEEK_API_KEY 未设置' }) 
-      };
-    }
-
     const requestData = JSON.parse(event.body);
 
-    // 调用 DeepSeek 官方接口
+    // 注意：去掉 v1，直接使用标准路径，这样更稳定
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -33,16 +22,13 @@ exports.handler = async function(event, context) {
     });
 
     const data = await response.json();
-    
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     };
   } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message })
-    };
+    // 这里的报错会直接显示在 Netlify Function 日志里
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
   }
 };
