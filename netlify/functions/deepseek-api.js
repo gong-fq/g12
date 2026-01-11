@@ -17,7 +17,7 @@ exports.handler = async function(event, context) {
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: requestData.messages,
-        temperature: 0.7
+        temperature: 0.5
       })
     });
 
